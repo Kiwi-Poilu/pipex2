@@ -1,0 +1,9 @@
+*.o
+CMakeLists.txt
+.idea
+cmake-build-debug
+file1
+file2
+*.swp
+pipex
+

@@ -12,114 +12,88 @@
 
 #include "../include/pipex.h"
 
-char	*find_p_line(char **envp)
+void	child_one(int *tube, int fd1, char **cmd1)
 {
-	int	i;
+	extern char	**environ;
 
-	i = 0;
-	while (envp[i])
+	if (fd1 < 0)
+		return ;
+	dup2(fd1, STDIN_FILENO);
+	dup2(tube[1], STDOUT_FILENO);
+	close(fd1);
+	close(tube[0]);
+	if (cmd1 != NULL)
 	{
-		if (ft_strncmp(envp[i], "PATH=", 5) == 0)
-			return (envp[i] + 5);
-		i++;
+		if (execve(cmd1[0], cmd1, environ) < 0)
+			ft_error("execve error: ", cmd1[0], 1);
 	}
-	return (NULL);
 }
 
-char	*find_path(char *cmd, char **paths)
+void	child_two(int *tube, int fd2, char **cmd2)
 {
-	char	*ret;
-	char	*tmp;
-	int		i;
+	extern char	**environ;
 
-	if (cmd[0] == '/')
+	if (fd2 < 0)
+		return ;
+	dup2(tube[0], STDIN_FILENO);
+	dup2(fd2, STDOUT_FILENO);
+	close(fd2);
+	close(tube[1]);
+	if (cmd2 != NULL)
 	{
-		free_array(paths);
-		return (ft_strdup(cmd));
+		if (execve(cmd2[0], cmd2, environ) < 0)
+			ft_error("execve error: ", cmd2[0], 1);
 	}
-	i = 0;
-	while (paths[i])
-	{
-		tmp = ft_strjoin(paths[i], "/");
-		ret = ft_strjoin(tmp, cmd);
-		free(tmp);
-		if (access(ret, F_OK) != -1)
-		{
-			free_array(paths);
-			return (ret);
-		}
-		free(ret);
-		i++;
-	}
-	free_array(paths);
-	return (NULL);
 }
 
-char	**get_cmd(char *av, char **envp)
-{
-	char	**cmd;
-	char	**paths;
-
-	cmd = ft_split(av, ' ');
-	if (access(cmd[0], F_OK) == 0)
-		return (cmd);
-	paths = ft_split(find_p_line(envp), ':');
-	if (paths == NULL)
-	{
-		ft_error("command not found: ", av, 1);
-		free_array(cmd);
-		return (NULL);
-	}
-	free(cmd[0]);
-	cmd[0] = find_path(av, paths);
-	if (cmd[0] == NULL)
-	{
-		free_array_not_first(cmd);
-		ft_error("command not found: ", av, 1);
-		return (NULL);
-	}
-	printf("cmd[0] = %s\n", cmd[0]);
-	(void)envp;
-	return (cmd);
-}
-
-void	pipex(int fd1, int fd2, char **av, char **envp)
+int	pipex(int fd1, int fd2, char **cmd1, char **cmd2)
 {
 	int		tube[2];
-	char	**cmd1;
-	char	**cmd2;
+	pid_t	children[2];
 
 	pipe(tube);
-	cmd1 = get_cmd(av[2], envp);
-	cmd2 = get_cmd(av[3], envp);
-	if (cmd1 != NULL && cmd2 != NULL)
+	children[0] = fork();
+	if (children[0] < 0)
+		return (ft_error("fork failed\n", NULL, 1));
+	if (children[0] == 0)
+		child_one(tube, fd1, cmd1);
+	else
 	{
+		children[1] = fork();
+		if (children[1] < 0)
+			return (ft_error("fork failed\n", NULL, 1));
+		if (children[1] == 0)
+			child_two(tube, fd2, cmd2);
+		else
+		{
+			close(tube[0]);
+			close(tube[1]);
+			waitpid(-1, NULL, 0);
+			waitpid(-1, NULL, 0);
+		}
 	}
-	free_array(cmd1);
-	free_array(cmd2);
-	(void)fd1;
-	(void)fd2;
+	return (0);
 }
 
 int	main(int ac, char **av, char **envp)
 {
-	int	fd1;
-	int	fd2;
+	int		fd1;
+	int		fd2;
+	char	**cmd1;
+	char	**cmd2;
 
 	if (ac != 5)
-		return (ft_error("expected 5 arguments, have ", ft_itoa(ac), 1));
+		return (ft_error("expected 5 arguments", NULL, 1));
 	fd1 = open(av[1], O_RDONLY);
 	fd2 = open(av[4], O_CREAT | O_RDWR | O_TRUNC, 0644);
-	if (fd1 < 0 || fd2 < 0)
-		return (ft_error("could not open file", NULL, 1));
-	pipex(fd1, fd2, av, envp);
+	if (fd1 < 0)
+		ft_error("could not open file: ", av[1], 1);
+	if (fd2 < 0)
+		ft_error("could not open file: ", av[4], 1);
+	cmd1 = get_cmd(av[2], envp);
+	cmd2 = get_cmd(av[3], envp);
+	pipex(fd1, fd2, cmd1, cmd2);
+	free_array(cmd1);
+	free_array(cmd2);
 	return (0);
 }
-
-/*
-int		main(int ac, char **av, char **envp)
-{
-	printf("%s\n", find_p_line(envp));
-	(void)ac;
-	(void)av;
-}*/

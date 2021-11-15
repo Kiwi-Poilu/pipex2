@@ -6,7 +6,8 @@ SRCS =	srcs/pipex.c \
 		srcs/utils.c \
 		srcs/ft_split.c \
 		srcs/ft_strjoin.c \
-		srcs/utils2.c
+		srcs/utils2.c \
+		srcs/cmd.c
 
 OBJS = ${SRCS:.c=.o}
 

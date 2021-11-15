@@ -1,29 +1,28 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_split.c                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sobouatt <sobouatt@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2021/11/15 18:35:28 by sobouatt          #+#    #+#             */
+/*   Updated: 2021/11/15 18:35:30 by sobouatt         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/pipex.h"
 
-void free_array(char **str)
+void	free_array(char **str)
 {
-	int i;
+	int	i;
 
 	i = 0;
 	if (!str)
-		return;
+		return ;
 	while (str[i] != NULL)
 		free(str[i++]);
 	free(str);
 }
-
-void free_array_not_first(char **str)
-{
-	int i;
-
-	i = 0;
-	if (!str)
-		return;
-	while (str[i] != NULL || i == 0)
-		free(str[i++]);
-	free(str);
-}
-
 
 int	w_len(char const *s, char c)
 {

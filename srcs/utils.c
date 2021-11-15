@@ -1,8 +1,50 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sobouatt <sobouatt@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2021/11/15 18:37:22 by sobouatt          #+#    #+#             */
+/*   Updated: 2021/11/15 18:37:23 by sobouatt         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/pipex.h"
+
+void	free_array_not_first(char **str)
+{
+	int	i;
+
+	i = 0;
+	if (!str)
+		return ;
+	while (str[i] != NULL || i == 0)
+		free(str[i++]);
+	free(str);
+}
+
+char	*ft_strdup(const char *s)
+{
+	int		i;
+	char	*ret;
+
+	ret = malloc((ft_strlen(s) + 1) * sizeof(char));
+	if (!ret)
+		return (NULL);
+	i = 0;
+	while (s[i])
+	{
+		ret[i] = s[i];
+		i++;
+	}
+	ret[i] = s[i];
+	return (ret);
+}
 
 int	ft_strncmp(const char *s1, const char *s2, size_t n)
 {
-	size_t i;
+	size_t	i;
 
 	i = 0;
 	while ((s1[i] || s2[i]) && (i < n))
@@ -14,58 +56,9 @@ int	ft_strncmp(const char *s1, const char *s2, size_t n)
 	return (0);
 }
 
-int		to_malloc(long n)
-{
-	int len;
-
-	len = 0;
-	if (n == 0)
-		return (1);
-	if (n < 0)
-	{
-		len++;
-		n = -n;
-	}
-	while (n > 0)
-	{
-		n = n / 10;
-		len++;
-	}
-	return (len);
-}
-
-char	*ft_itoa(int n)
-{
-	unsigned int	nb;
-	int				len;
-	char			*str;
-
-	nb = n < 0 ? -n : n;
-	len = to_malloc(n);
-	if (!(str = malloc(len * sizeof(char) + 1)))
-		return (NULL);
-	str[len--] = '\0';
-	if (n == 0)
-	{
-		str[0] = '0';
-		return (str);
-	}
-	if (n < 0)
-	{
-		str[0] = '-';
-		nb = n * -1;
-	}
-	while (nb > 0)
-	{
-		str[len--] = nb % 10 + 48;
-		nb = nb / 10;
-	}
-	return (str);
-}
-
 int	ft_strlen(const char *str)
 {
-	int i;
+	int	i;
 
 	i = 0;
 	while (str[i])
@@ -78,6 +71,6 @@ int	ft_error(char *error_message, char *optional, int ret)
 	write(STDERR_FILENO, error_message, ft_strlen(error_message));
 	if (optional != NULL)
 		write(STDERR_FILENO, optional, ft_strlen(optional));
-	write(1, "\n", 1);
+	write(STDERR_FILENO, "\n", 1);
 	return (ret);
 }
